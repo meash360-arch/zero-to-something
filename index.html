@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Zero to Something</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zero2Something">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230a0a0b'/><text x='90' y='118' font-size='90' font-weight='900' text-anchor='middle' fill='%23c6f135' font-family='Arial Black, sans-serif'>0→</text></svg>">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root { --bg:#0a0a0b; --card:#141416; --card2:#1b1b1e; --lime:#c6f135; --text:#f5f5f4; --muted:#8e8e93; --red:#ff5c5c; --gold:#c9a227; }
+  html, body { height:100%; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif; padding-bottom:110px; }
+  header { padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 12px; position:sticky; top:0; background:rgba(10,10,11,.92); backdrop-filter:blur(12px); z-index:10; border-bottom:1px solid #1e1e22; }
+  header h1 { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  header h2 { font-size:34px; font-weight:900; letter-spacing:-1px; margin-top:2px; }
+  header h2 .lime { color:var(--lime); }
+  .wrap { padding:16px 16px 0; max-width:520px; margin:0 auto; }
+  .card { background:var(--card); border-radius:18px; padding:18px; margin-bottom:14px; border:1px solid #222226; }
+  .big-num { font-size:52px; font-weight:900; letter-spacing:-2px; }
+  .big-num .lime { color:var(--lime); }
+  .sub { color:var(--muted); font-size:14px; margin-top:4px; }
+  .row { display:flex; gap:10px; }
+  .row .card { flex:1; text-align:center; }
+  .stat-label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:6px; }
+  .stat-val { font-size:26px; font-weight:800; }
+  .in { color:var(--lime); } .out { color:var(--red); }
+  .btn { display:block; width:100%; padding:16px; border-radius:14px; border:none; font-size:17px; font-weight:800; cursor:pointer; }
+  .btn-lime { background:var(--lime); color:#0a0a0b; }
+  .btn-ghost { background:var(--card2); color:var(--text); border:1px solid #2c2c31; margin-top:10px; }
+  .btn:active { transform:scale(.98); opacity:.9; }
+  .item { display:flex; align-items:center; justify-content:space-between; padding:14px 4px; border-bottom:1px solid #1e1e22; }
+  .item:last-child { border-bottom:none; }
+  .item .t { font-weight:700; font-size:16px; }
+  .item .d { color:var(--muted); font-size:13px; margin-top:2px; }
+  .item .amt { font-weight:800; font-size:17px; }
+  .del { background:none; border:none; color:var(--muted); font-size:20px; padding:8px; cursor:pointer; }
+  .empty { text-align:center; padding:28px 10px; color:var(--muted); }
+  .empty a { color:var(--lime); font-weight:800; cursor:pointer; }
+  .prompt { color:var(--muted); font-size:15px; line-height:1.5; margin:18px 4px; }
+  .prompt strong { color:var(--text); }
+  /* form sheet */
+  .sheet-bg { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; display:none; }
+  .sheet-bg.open { display:block; }
+  .sheet { position:fixed; left:0; right:0; bottom:0; background:#17171a; border-radius:24px 24px 0 0; padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 24px); z-index:51; transform:translateY(100%); transition:transform .28s ease; max-width:520px; margin:0 auto; }
+  .sheet-bg.open + .sheet, .sheet.open { transform:translateY(0); }
+  .sheet h3 { font-size:22px; font-weight:900; margin-bottom:14px; }
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-size:12px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:6px; }
+  .field input, .field select { width:100%; background:#0e0e10; border:1px solid #2a2a2e; color:var(--text); border-radius:12px; padding:14px; font-size:17px; }
+  .field input:focus, .field select:focus { outline:none; border-color:var(--lime); }
+  .seg { display:flex; background:#0e0e10; border-radius:12px; padding:4px; gap:4px; }
+  .seg button { flex:1; padding:12px; border:none; border-radius:9px; background:transparent; color:var(--muted); font-size:16px; font-weight:700; cursor:pointer; }
+  .seg button.on-inc { background:var(--lime); color:#0a0a0b; }
+  .seg button.on-exp { background:var(--red); color:#fff; }
+  /* goal check */
+  .goal { display:flex; align-items:center; gap:14px; padding:16px 4px; border-bottom:1px solid #1e1e22; }
+  .goal:last-child { border-bottom:none; }
+  .check { width:34px; height:34px; border-radius:50%; border:2px solid #3a3a40; background:transparent; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:#0a0a0b; }
+  .goal.done .check { background:var(--lime); border-color:var(--lime); }
+  .goal .gt { font-weight:700; font-size:16px; flex:1; }
+  .goal.done .gt { text-decoration:line-through; color:var(--muted); }
+  .streak { background:#0e0e10; border:1px solid #2a2a2e; border-radius:10px; padding:6px 10px; font-size:13px; font-weight:800; color:var(--gold); white-space:nowrap; }
+  /* moves */
+  .pill { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; padding:5px 10px; border-radius:20px; }
+  .p-interested { background:#23230f; color:var(--lime); }
+  .p-applied { background:#10233a; color:#5eb1ff; }
+  .p-followup { background:#2c1a08; color:#ffab5e; }
+  .p-won { background:#0f2c1a; color:#4ade80; }
+  .move .mt { font-weight:700; font-size:16px; }
+  .move .md { color:var(--muted); font-size:13px; margin-top:2px; }
+  .move select { background:#0e0e10; border:1px solid #2a2a2e; color:var(--text); border-radius:10px; padding:8px; font-size:13px; margin-top:8px; }
+  /* tab bar */
+  nav { position:fixed; bottom:0; left:0; right:0; background:rgba(16,16,18,.96); backdrop-filter:blur(12px); border-top:1px solid #1e1e22; display:flex; padding-bottom:env(safe-area-inset-bottom,0px); z-index:40; }
+  nav button { flex:1; background:none; border:none; color:var(--muted); padding:12px 0 14px; font-size:11px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  nav button .ic { font-size:22px; }
+  nav button.on { color:var(--lime); }
+  .view { display:none; } .view.on { display:block; }
+  .fab { position:fixed; right:18px; bottom:calc(96px + env(safe-area-inset-bottom,0px)); width:62px; height:62px; border-radius:50%; background:var(--lime); color:#0a0a0b; border:none; font-size:30px; font-weight:300; z-index:41; cursor:pointer; box-shadow:0 8px 24px rgba(198,241,53,.35); }
+  .fab:active { transform:scale(.94); }
+  .note { font-size:12px; color:var(--muted); text-align:center; padding:20px; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Zero to Something</h1>
+  <h2 id="viewTitle">Today's <span class="lime">moves</span></h2>
+</header>
+
+<div class="wrap">
+
+  <!-- HUSTLE -->
+  <div class="view on" id="v-hustle">
+    <div class="card">
+      <div class="big-num"><span id="doneCount">0</span><span class="lime">/</span><span id="goalCount">0</span></div>
+      <div class="sub" id="hustleMsg">Set the first move.</div>
+    </div>
+    <div id="goalList"></div>
+    <p class="prompt" id="goalPrompt">No promises yet.<br>Add one daily goal you can actually keep. <strong>Small counts.</strong></p>
+    <p class="prompt"><strong>Don't wait to feel ready.</strong> Finish one thing.</p>
+  </div>
+
+  <!-- MONEY -->
+  <div class="view" id="v-money">
+    <div class="card">
+      <div class="stat-label">Balance</div>
+      <div class="big-num" id="balance">$0</div>
+      <div class="sub" id="moneyMsg">Every dollar tracked is a dollar respected.</div>
+    </div>
+    <div class="row">
+      <div class="card"><div class="stat-label">In</div><div class="stat-val in" id="totalIn">$0</div></div>
+      <div class="card"><div class="stat-label">Out</div><div class="stat-val out" id="totalOut">$0</div></div>
+    </div>
+    <div id="txList"></div>
+  </div>
+
+  <!-- MOVES -->
+  <div class="view" id="v-moves">
+    <div class="card">
+      <div class="big-num"><span id="moveCount">0</span></div>
+      <div class="sub">Leads on the board. Follow up wins.</div>
+    </div>
+    <div id="moveList"></div>
+    <p class="prompt"><strong>Applied is not done.</strong> The follow-up is where jobs are won.</p>
+  </div>
+
+  <p class="note">Your data lives in this browser on this phone.<br>Don't clear site data and you're good.</p>
+</div>
+
+<button class="fab" id="fab">+</button>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet"></div>
+
+<nav>
+  <button data-v="hustle" class="on"><span class="ic">✓</span>Hustle</button>
+  <button data-v="money"><span class="ic">$</span>Money</button>
+  <button data-v="moves"><span class="ic">→</span>Moves</button>
+</nav>
+
+<script>
+const $ = s => document.querySelector(s);
+const todayStr = () => new Date().toISOString().slice(0,10);
+const money = n => (n<0?'-$':'$') + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+
+let store = {
+  get txs(){ try{return JSON.parse(localStorage.getItem('zts_txs'))||[]}catch(e){return[]} },
+  set txs(v){ localStorage.setItem('zts_txs', JSON.stringify(v)); },
+  get goals(){ try{return JSON.parse(localStorage.getItem('zts_goals'))||[]}catch(e){return[]} },
+  set goals(v){ localStorage.setItem('zts_goals', JSON.stringify(v)); },
+  get moves(){ try{return JSON.parse(localStorage.getItem('zts_moves'))||[]}catch(e){return[]} },
+  set moves(v){ localStorage.setItem('zts_moves', JSON.stringify(v)); },
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- STARTER MOVES ----------
+const STARTERS = [
+  {t:'Comfort Keepers — Caregiver', d:'Brooklyn Park · $21–23/hr Fri–Sun · urgently hiring', s:'interested'},
+  {t:'Sevita — In-Home Caregiver', d:'Brooklyn Center · ask about Fri/Sat/Sun 4–10pm shift', s:'interested'},
+  {t:'Urbana Place Senior Living', d:'Brooklyn Park · HHA $17–22 / CNA $19–24 · every other weekend', s:'interested'},
+  {t:'Concentrix assessment', d:'SHL test — needs a computer + webcam. CareerForce Brooklyn Center.', s:'followup'},
+  {t:'CAP-HC energy assistance', d:'Call 952-930-3541 · grant for the Xcel bill', s:'followup'},
+  {t:'FAH-LEH first sale', d:'Store is live. Daily story is running. First order changes everything.', s:'interested'},
+];
+function seedMoves(){
+  if(localStorage.getItem('zts_seeded')) return;
+  store.moves = STARTERS.map(m => ({id:uid(), ...m}));
+  localStorage.setItem('zts_seeded','1');
+}
+
+// ---------- NAV ----------
+let cur = 'hustle';
+const titles = { hustle:'Today\'s <span class="lime">moves</span>', money:'Money <span class="lime">talks</span>', moves:'Make <span class="lime">moves</span>' };
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  cur = b.dataset.v;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on', x===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id==='v-'+cur));
+  $('#viewTitle').innerHTML = titles[cur];
+  window.scrollTo(0,0);
+});
+
+// ---------- SHEET ----------
+function openSheet(html){ $('#sheet').innerHTML = html; $('#sheetBg').classList.add('open'); $('#sheet').classList.add('open'); }
+function closeSheet(){ $('#sheetBg').classList.remove('open'); $('#sheet').classList.remove('open'); }
+$('#sheetBg').onclick = closeSheet;
+
+// ---------- MONEY ----------
+function renderMoney(){
+  const txs = store.txs;
+  let bal=0, tin=0, tout=0;
+  txs.forEach(t=>{ const a=parseFloat(t.amt)||0; if(t.type==='in'){bal+=a;tin+=a;} else {bal-=a;tout+=a;} });
+  $('#balance').textContent = money(bal);
+  $('#balance').style.color = bal<0 ? 'var(--red)' : 'var(--text)';
+  $('#totalIn').textContent = money(tin);
+  $('#totalOut').textContent = money(tout);
+  $('#moneyMsg').textContent = txs.length===0 ? 'Every dollar tracked is a dollar respected.' : (bal>=0 ? 'Green means growing. Keep it.' : 'In the red. Time to make a move.');
+  $('#txList').innerHTML = txs.length===0
+    ? '<div class="empty">No money logged yet.<br><a id="emptyTx">Log your first one</a></div>'
+    : txs.slice().reverse().map(t=>`
+      <div class="item">
+        <div><div class="t">${esc(t.note)||(t.type==='in'?'Income':'Expense')}</div><div class="d">${esc(t.date)}</div></div>
+        <div style="display:flex;align-items:center;gap:4px;"><span class="amt ${t.type==='in'?'in':'out'}">${t.type==='in'?'+':'−'}${money(parseFloat(t.amt)||0).slice(1)}</span><button class="del" data-del-tx="${t.id}">×</button></div>
+      </div>`).join('');
+  const e=$('#emptyTx'); if(e) e.onclick=()=>txForm();
+  document.querySelectorAll('[data-del-tx]').forEach(b=>b.onclick=()=>{ if(confirm('Delete this entry?')){ store.txs = store.txs.filter(t=>t.id!==b.dataset.delTx); renderMoney(); }});
+}
+let txType='in';
+function txForm(){
+  txType='in';
+  openSheet(`
+    <h3>Log money</h3>
+    <div class="field"><div class="seg">
+      <button id="segIn" class="on-inc">+ In</button><button id="segOut">− Out</button>
+    </div></div>
+    <div class="field"><label>Amount</label><input id="fAmt" type="number" inputmode="decimal" placeholder="0.00"></div>
+    <div class="field"><label>Note</label><input id="fNote" type="text" placeholder="What was it?"></div>
+    <button class="btn btn-lime" id="fSave">Save</button>
+    <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>`);
+  $('#segIn').onclick=()=>{txType='in';$('#segIn').className='on-inc';$('#segOut').className='';};
+  $('#segOut').onclick=()=>{txType='out';$('#segOut').className='on-exp';$('#segIn').className='';};
+  setTimeout(()=>$('#fAmt').focus(),300);
+  $('#fSave').onclick=()=>{
+    const amt=parseFloat($('#fAmt').value);
+    if(!amt||amt<=0){ alert('Enter an amount.'); return; }
+    const txs=store.txs; txs.push({id:uid(), type:txType, amt, note:$('#fNote').value.trim(), date:todayStr()});
+    store.txs=txs; closeSheet(); renderMoney();
+  };
+}
+
+// ---------- HUSTLE ----------
+function streakOf(g){
+  let s=0, d=new Date();
+  if(!g.doneDates.includes(todayStr())) d.setDate(d.getDate()-1);
+  while(g.doneDates.includes(d.toISOString().slice(0,10))){ s++; d.setDate(d.getDate()-1); }
+  return s;
+}
+function renderHustle(){
+  const goals=store.goals, t=todayStr();
+  const done=goals.filter(g=>g.doneDates.includes(t)).length;
+  $('#doneCount').textContent=done; $('#goalCount').textContent=goals.length;
+  $('#hustleMsg').textContent = goals.length===0 ? 'Set the first move.' : (done===goals.length&&goals.length>0 ? 'Perfect day. Run it back tomorrow.' : done+' down, '+(goals.length-done)+' to go.');
+  $('#goalPrompt').style.display = goals.length===0 ? 'block':'none';
+  $('#goalList').innerHTML = goals.map(g=>{
+    const isDone=g.doneDates.includes(t), st=streakOf(g);
+    return `<div class="goal ${isDone?'done':''}">
+      <button class="check" data-toggle="${g.id}">${isDone?'✓':''}</button>
+      <div class="gt">${esc(g.text)}</div>
+      ${st>0?`<span class="streak">🔥 ${st}</span>`:''}
+      <button class="del" data-del-g="${g.id}">×</button>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{
+    const goals=store.goals, g=goals.find(x=>x.id===b.dataset.toggle), t=todayStr();
+    if(g.doneDates.includes(t)) g.doneDates=g.doneDates.filter(d=>d!==t); else g.doneDates.push(t);
+    store.goals=goals; renderHustle();
+  });
+  document.querySelectorAll('[data-del-g]').forEach(b=>b.onclick=()=>{ if(confirm('Delete this goal?')){ store.goals=store.goals.filter(g=>g.id!==b.dataset.delG); renderHustle(); }});
+}
+function goalForm(){
+  openSheet(`<h3>New daily goal</h3>
+    <div class="field"><label>Goal</label><input id="gText" type="text" placeholder="e.g. Apply to 1 job"></div>
+    <button class="btn btn-lime" id="gSave">Add goal</button>
+    <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>`);
+  setTimeout(()=>$('#gText').focus(),300);
+  $('#gSave').onclick=()=>{
+    const v=$('#gText').value.trim(); if(!v){alert('Name your goal.');return;}
+    const goals=store.goals; goals.push({id:uid(), text:v, doneDates:[]});
+    store.goals=goals; closeSheet(); renderHustle();
+  };
+}
+
+// ---------- MOVES ----------
+const PILL={interested:'Interested',applied:'Applied',followup:'Follow up',won:'Won'};
+function renderMoves(){
+  const moves=store.moves;
+  $('#moveCount').textContent=moves.length;
+  $('#moveList').innerHTML = moves.length===0 ? '<div class="empty">Board is empty.<br><a id="emptyMv">Add your first lead</a></div>'
+    : moves.map(m=>`
+      <div class="item move"><div style="flex:1;">
+        <div class="mt">${esc(m.t)}</div>${m.d?`<div class="md">${esc(m.d)}</div>`:''}
+        <select data-status="${m.id}">
+          ${Object.keys(PILL).map(k=>`<option value="${k}" ${m.s===k?'selected':''}>${PILL[k]}</option>`).join('')}
+        </select>
+      </div><button class="del" data-del-m="${m.id}">×</button></div>`).join('');
+  const e=$('#emptyMv'); if(e) e.onclick=()=>moveForm();
+  document.querySelectorAll('[data-status]').forEach(s=>s.onchange=()=>{ const moves=store.moves, m=moves.find(x=>x.id===s.dataset.status); m.s=s.value; store.moves=moves; renderMoves(); });
+  document.querySelectorAll('[data-del-m]').forEach(b=>b.onclick=()=>{ if(confirm('Remove this lead?')){ store.moves=store.moves.filter(m=>m.id!==b.dataset.delM); renderMoves(); }});
+}
+function moveForm(){
+  openSheet(`<h3>New lead</h3>
+    <div class="field"><label>What is it?</label><input id="mT" type="text" placeholder="e.g. Urbana Place application"></div>
+    <div class="field"><label>Details</label><input id="mD" type="text" placeholder="Pay, shift, contact…"></div>
+    <button class="btn btn-lime" id="mSave">Add lead</button>
+    <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>`);
+  setTimeout(()=>$('#mT').focus(),300);
+  $('#mSave').onclick=()=>{
+    const v=$('#mT').value.trim(); if(!v){alert('Name the lead.');return;}
+    const moves=store.moves; moves.push({id:uid(), t:v, d:$('#mD').value.trim(), s:'interested'});
+    store.moves=moves; closeSheet(); renderMoves();
+  };
+}
+
+// ---------- FAB ----------
+$('#fab').onclick=()=>{ if(cur==='money')txForm(); else if(cur==='hustle')goalForm(); else moveForm(); };
+
+// ---------- INIT ----------
+seedMoves(); renderHustle(); renderMoney(); renderMoves();
+</script>
+</body>
+</html>
